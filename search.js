@@ -1,10 +1,5 @@
 /**
- * Handles search input field behaviors:
- * - Auto-focuses the input on page load.
- * - Dynamically resizes the input width based on its content.
- * - Executes a DuckDuckGo search in a new tab when Enter is pressed.
- * - Clears and resizes the input after search.
- * - Re-focuses the input when clicking anywhere except links or the input itself.
+ * Handles search input field behaviors with overflow protection
  */
 
 const searchInput = document.getElementById('search-input');
@@ -14,11 +9,26 @@ window.addEventListener('load', () => {
     searchInput.focus();
 });
 
-// Dynamically resize input based on content
+// Dynamically resize input based on content with overflow protection
 function resizeInput() {
     const content = searchInput.value || '';
-    // Minimum width of 1ch for the cursor, plus content length
-    searchInput.style.width = Math.max(1, content.length + 1) + 'ch';
+    const contentLength = content.length;
+    
+    // Calculate available space
+    const containerWidth = window.innerWidth;
+    const promptWidth = 8; // Approximate width of "> cd ~/" in ch units
+    const maxAvailableWidth = Math.floor((containerWidth * 0.8) / 20); // Conservative estimate
+    
+    // Set width with limits
+    const targetWidth = Math.max(1, contentLength + 1);
+    const finalWidth = Math.min(targetWidth, maxAvailableWidth);
+    
+    searchInput.style.width = finalWidth + 'ch';
+    
+    // If content is too long, scroll to end
+    if (contentLength > maxAvailableWidth - 2) {
+        searchInput.scrollLeft = searchInput.scrollWidth;
+    }
 }
 
 // Handle input changes to resize the field
@@ -39,6 +49,11 @@ document.addEventListener('click', (e) => {
     if (e.target !== searchInput && !e.target.closest('a')) {
         searchInput.focus();
     }
+});
+
+// Handle window resize to recalculate input width
+window.addEventListener('resize', () => {
+    resizeInput();
 });
 
 // Initialize proper width on load
