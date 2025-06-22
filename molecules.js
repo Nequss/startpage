@@ -1,5 +1,5 @@
 /**
- * MOLECULAR BACKGROUND ANIMATION - THEME-AWARE VERSION WITH FIXED BACKGROUND
+ * MOLECULAR BACKGROUND ANIMATION - PERFORMANCE OPTIMIZED VERSION
  */
 
 class MolecularBackground {
@@ -8,14 +8,10 @@ class MolecularBackground {
         this.ctx = null;
         this.molecules = [];
         this.connections = [];
+        this.animationId = null;
         
-        this.mouse = { 
-            x: -1000,
-            y: -1000,
-            radius: 100
-        };
+        this.mouse = { x: -1000, y: -1000, radius: 100 };
         
-        // Default settings
         this.defaultSettings = {
             numMolecules: 120,
             maxDistance: 140,
@@ -26,50 +22,47 @@ class MolecularBackground {
         };
         
         this.settings = { ...this.defaultSettings };
-        
         this.isAnimating = false;
         this.resizeTimeout = null;
+        this.colorUpdateTimeout = null;
         
-        // Fixed movement parameters
+        // Performance optimizations
         this.baseRadius = 0.1;
         this.radiusVariation = 1;
-        
-        // Store current colors for immediate access
         this.currentColors = null;
+        this.lastFrameTime = 0;
+        this.targetFPS = 60;
+        this.frameInterval = 1000 / this.targetFPS;
+        
+        // Cleanup tracking
+        this.eventListeners = [];
+        this.observers = [];
         
         this.loadSettings();
         this.init();
     }
 
-    // FIXED: Get current theme colors with better fallback handling
     getThemeColors() {
         const style = getComputedStyle(document.documentElement);
-        
-        // Force style recalculation
-        document.documentElement.offsetHeight;
-        
-        const moleculeBg = style.getPropertyValue('--molecule-bg').trim();
-        const moleculeColor = style.getPropertyValue('--molecule-color').trim();
-        const moleculeConnection = style.getPropertyValue('--molecule-connection').trim();
-        const moleculeGlow = style.getPropertyValue('--molecule-glow').trim();
+        document.documentElement.offsetHeight; // Force recalculation
         
         return {
-            background: moleculeBg || '#1A1A1A',
-            molecule: moleculeColor || 'rgba(143, 145, 145, 0.8)',
-            connection: moleculeConnection || 'rgba(143, 145, 145, 0.6)',
-            glow: moleculeGlow || 'rgba(143, 145, 145, 0.1)'
+            background: style.getPropertyValue('--molecule-bg').trim() || '#1A1A1A',
+            molecule: style.getPropertyValue('--molecule-color').trim() || 'rgba(143, 145, 145, 0.8)',
+            connection: style.getPropertyValue('--molecule-connection').trim() || 'rgba(143, 145, 145, 0.6)',
+            glow: style.getPropertyValue('--molecule-glow').trim() || 'rgba(143, 145, 145, 0.1)'
         };
     }
 
     loadSettings() {
-        const stored = localStorage.getItem('molecule-settings');
-        if (stored) {
-            try {
+        try {
+            const stored = localStorage.getItem('molecule-settings');
+            if (stored) {
                 this.settings = { ...this.defaultSettings, ...JSON.parse(stored) };
-            } catch (e) {
-                console.error('Error loading molecule settings:', e);
-                this.settings = { ...this.defaultSettings };
             }
+        } catch (e) {
+            console.error('Error loading molecule settings:', e);
+            this.settings = { ...this.defaultSettings };
         }
     }
 
@@ -81,70 +74,39 @@ class MolecularBackground {
         this.settings = { ...this.settings, ...newSettings };
         this.saveSettings();
         
-        // Only recreate molecules if count changed
         if (newSettings.numMolecules && newSettings.numMolecules !== this.molecules.length) {
             this.createMolecules();
         }
     }
 
-    // FIXED: Update colors when theme changes - COMPLETELY REWRITTEN
     updateThemeColors() {
-        // Force multiple style recalculations
-        document.documentElement.offsetHeight;
-        getComputedStyle(document.documentElement).getPropertyValue('--molecule-bg');
+        // Clear previous timeout to prevent multiple updates
+        if (this.colorUpdateTimeout) {
+            clearTimeout(this.colorUpdateTimeout);
+        }
         
-        // Use requestAnimationFrame for better timing
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                const colors = this.getThemeColors();
-                
-                // Store colors for immediate use in draw()
-                this.currentColors = colors;
-                
-                // Update canvas background immediately
-                if (this.canvas) {
-                    this.canvas.style.backgroundColor = colors.background;
-                    this.canvas.style.background = colors.background;
-                }
-                
-                console.log('Theme colors updated:', colors);
-            }, 150); // Increased delay for better CSS synchronization
-        });
+        this.colorUpdateTimeout = setTimeout(() => {
+            const colors = this.getThemeColors();
+            this.currentColors = colors;
+            
+            if (this.canvas) {
+                this.canvas.style.backgroundColor = colors.background;
+            }
+        }, 200);
     }
 
-    // NEW: Force immediate color update
     forceColorUpdate() {
-        // Get fresh colors
         const colors = this.getThemeColors();
-        
-        // Store colors for immediate use in draw()
         this.currentColors = colors;
         
-        // Update canvas background immediately
         if (this.canvas) {
             this.canvas.style.backgroundColor = colors.background;
         }
-        
-        console.log('Forced color update:', colors);
-    }
-
-    // NEW: Debug method to check CSS variables
-    debugThemeColors() {
-        const style = getComputedStyle(document.documentElement);
-        console.log('Current theme attribute:', document.body.getAttribute('data-theme'));
-        console.log('CSS Variables:', {
-            bg: style.getPropertyValue('--molecule-bg'),
-            color: style.getPropertyValue('--molecule-color'),
-            connection: style.getPropertyValue('--molecule-connection'),
-            glow: style.getPropertyValue('--molecule-glow')
-        });
     }
 
     init() {
         this.canvas = document.createElement('canvas');
         this.canvas.id = 'molecular-bg';
-        
-        // FIXED: Remove background from initial style - let updateThemeColors handle it
         this.canvas.style.cssText = `
             position: fixed;
             top: 0;
@@ -162,26 +124,16 @@ class MolecularBackground {
         this.createMolecules();
         this.setupEventListeners();
         
-        // FIXED: Apply initial theme colors after a longer delay
-        setTimeout(() => {
-            this.updateThemeColors();
-        }, 200);
-        
+        setTimeout(() => this.updateThemeColors(), 200);
         this.startAnimation();
-        
-        // Listen for theme changes
         this.observeThemeChanges();
     }
 
-    // FIXED: Better theme change observer
     observeThemeChanges() {
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
-                    // Add longer delay for CSS to fully update
-                    setTimeout(() => {
-                        this.updateThemeColors();
-                    }, 200);
+                    setTimeout(() => this.updateThemeColors(), 200);
                 }
             });
         });
@@ -191,11 +143,7 @@ class MolecularBackground {
             attributeFilter: ['data-theme']
         });
         
-        // Also observe document.documentElement for theme changes
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-theme']
-        });
+        this.observers.push(observer);
     }
 
     resize() {
@@ -204,12 +152,9 @@ class MolecularBackground {
     }
 
     handleResize() {
-        if (this.resizeTimeout) {
-            clearTimeout(this.resizeTimeout);
-        }
-
-        this.resize();
+        if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
         
+        this.resize();
         this.resizeTimeout = setTimeout(() => {
             const currentCount = this.molecules.length;
             if (Math.abs(this.settings.numMolecules - currentCount) > 10) {
@@ -219,7 +164,10 @@ class MolecularBackground {
     }
 
     createMolecules() {
-        this.molecules = [];
+        // Clear existing molecules to prevent memory leak
+        this.molecules.length = 0;
+        this.connections.length = 0;
+        
         const width = this.canvas.width;
         const height = this.canvas.height;
         
@@ -241,24 +189,33 @@ class MolecularBackground {
     }
 
     setupEventListeners() {
-        window.addEventListener('resize', () => {
-            this.handleResize();
-        });
-        
-        document.addEventListener('mousemove', (e) => {
+        const resizeHandler = () => this.handleResize();
+        const mouseMoveHandler = (e) => {
             this.mouse.x = e.clientX;
             this.mouse.y = e.clientY;
-        });
-
-        document.addEventListener('mouseleave', () => {
+        };
+        const mouseLeaveHandler = () => {
             this.mouse.x = -1000;
             this.mouse.y = -1000;
-        });
+        };
+
+        window.addEventListener('resize', resizeHandler);
+        document.addEventListener('mousemove', mouseMoveHandler);
+        document.addEventListener('mouseleave', mouseLeaveHandler);
+
+        // Track listeners for cleanup
+        this.eventListeners.push(
+            { element: window, event: 'resize', handler: resizeHandler },
+            { element: document, event: 'mousemove', handler: mouseMoveHandler },
+            { element: document, event: 'mouseleave', handler: mouseLeaveHandler }
+        );
     }
 
     updateMolecules() {
         const width = this.canvas.width;
         const height = this.canvas.height;
+        const mouseRadius = this.mouse.radius;
+        const repelForce = this.settings.mouseRepelForce * 0.015;
         
         for (let i = 0; i < this.molecules.length; i++) {
             const molecule = this.molecules[i];
@@ -266,12 +223,12 @@ class MolecularBackground {
             const dy = this.mouse.y - molecule.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            if (distance < this.mouse.radius && distance > 0) {
-                const force = (this.mouse.radius - distance) / this.mouse.radius;
+            if (distance < mouseRadius && distance > 0) {
+                const force = (mouseRadius - distance) / mouseRadius;
                 const angle = Math.atan2(dy, dx);
                 
-                molecule.vx -= Math.cos(angle) * force * this.settings.mouseRepelForce * 0.015;
-                molecule.vy -= Math.sin(angle) * force * this.settings.mouseRepelForce * 0.015;
+                molecule.vx -= Math.cos(angle) * force * repelForce;
+                molecule.vy -= Math.sin(angle) * force * repelForce;
             } else {
                 molecule.vx += (molecule.originalVx - molecule.vx) * 0.02;
                 molecule.vy += (molecule.originalVy - molecule.vy) * 0.02;
@@ -286,11 +243,10 @@ class MolecularBackground {
             if (molecule.y < -10) molecule.y = height + 10;
             if (molecule.y > height + 10) molecule.y = -10;
 
-            // Random movement
+            // Random movement with limits
             molecule.vx += (Math.random() - 0.5) * 0.025;
             molecule.vy += (Math.random() - 0.5) * 0.025;
 
-            // Speed limit
             const maxVel = 2.5;
             if (Math.abs(molecule.vx) > maxVel) molecule.vx = Math.sign(molecule.vx) * maxVel;
             if (Math.abs(molecule.vy) > maxVel) molecule.vy = Math.sign(molecule.vy) * maxVel;
@@ -298,7 +254,9 @@ class MolecularBackground {
     }
 
     findConnections() {
-        this.connections = [];
+        this.connections.length = 0; // Clear without creating new array
+        const maxDistance = this.settings.maxDistance;
+        const connectionOpacity = this.settings.connectionOpacity;
         
         for (let i = 0; i < this.molecules.length; i++) {
             for (let j = i + 1; j < this.molecules.length; j++) {
@@ -306,9 +264,8 @@ class MolecularBackground {
                 const dy = this.molecules[i].y - this.molecules[j].y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                if (distance < this.settings.maxDistance) {
-                    const opacity = (1 - distance / this.settings.maxDistance) * this.settings.connectionOpacity;
-                    
+                if (distance < maxDistance) {
+                    const opacity = (1 - distance / maxDistance) * connectionOpacity;
                     this.connections.push({
                         from: this.molecules[i],
                         to: this.molecules[j],
@@ -319,79 +276,60 @@ class MolecularBackground {
         }
     }
 
-    // Helper function to parse rgba/rgb values - IMPROVED
     parseColor(colorString) {
         if (colorString.includes('rgba(')) {
             const match = colorString.match(/rgba\(([^)]+)\)/);
             if (match) {
                 const values = match[1].split(',').map(v => parseFloat(v.trim()));
-                return {
-                    r: values[0] || 143,
-                    g: values[1] || 145,
-                    b: values[2] || 145,
-                    a: values[3] || 0.8
-                };
+                return { r: values[0] || 143, g: values[1] || 145, b: values[2] || 145, a: values[3] || 0.8 };
             }
         } else if (colorString.includes('rgb(')) {
             const match = colorString.match(/rgb\(([^)]+)\)/);
             if (match) {
                 const values = match[1].split(',').map(v => parseFloat(v.trim()));
-                return {
-                    r: values[0] || 143,
-                    g: values[1] || 145,
-                    b: values[2] || 145,
-                    a: 1
-                };
+                return { r: values[0] || 143, g: values[1] || 145, b: values[2] || 145, a: 1 };
             }
         }
-        return { r: 143, g: 145, b: 145, a: 0.8 }; // fallback
+        return { r: 143, g: 145, b: 145, a: 0.8 };
     }
 
     draw() {
-        // Use stored colors if available, otherwise get fresh ones
         const colors = this.currentColors || this.getThemeColors();
         
-        // Clear with background - ALWAYS use the theme background
+        // Clear canvas
         this.ctx.fillStyle = colors.background;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw connections with theme colors
+        // Draw connections
         this.ctx.lineWidth = this.settings.connectionThickness;
+        const connectionColor = this.parseColor(colors.connection);
+        
         for (let i = 0; i < this.connections.length; i++) {
             const connection = this.connections[i];
             this.ctx.beginPath();
             this.ctx.moveTo(connection.from.x, connection.from.y);
             this.ctx.lineTo(connection.to.x, connection.to.y);
-            
-            // Parse connection color and apply opacity
-            const connectionColor = this.parseColor(colors.connection);
             this.ctx.strokeStyle = `rgba(${connectionColor.r}, ${connectionColor.g}, ${connectionColor.b}, ${connection.opacity})`;
-            
             this.ctx.stroke();
         }
 
-        // Draw molecules with theme colors
+        // Draw molecules
+        const moleculeColor = this.parseColor(colors.molecule);
+        const glowColor = this.parseColor(colors.glow);
+        
         for (let i = 0; i < this.molecules.length; i++) {
             const molecule = this.molecules[i];
             
             // Main molecule
             this.ctx.beginPath();
             this.ctx.arc(molecule.x, molecule.y, molecule.radius, 0, Math.PI * 2);
-            
-            // Parse molecule color and apply opacity
-            const moleculeColor = this.parseColor(colors.molecule);
             this.ctx.fillStyle = `rgba(${moleculeColor.r}, ${moleculeColor.g}, ${moleculeColor.b}, ${molecule.opacity * 0.8})`;
-            
             this.ctx.fill();
             
             // Glow effect
             this.ctx.beginPath();
             this.ctx.arc(molecule.x, molecule.y, molecule.radius + 1.5, 0, Math.PI * 2);
-            
-            // Parse glow color and apply opacity
-            const glowColor = this.parseColor(colors.glow);
             this.ctx.fillStyle = `rgba(${glowColor.r}, ${glowColor.g}, ${glowColor.b}, ${molecule.opacity * 0.1})`;
-            
             this.ctx.fill();
         }
     }
@@ -399,40 +337,77 @@ class MolecularBackground {
     startAnimation() {
         if (this.isAnimating) return;
         this.isAnimating = true;
+        this.lastFrameTime = performance.now();
         this.animate();
     }
 
     animate() {
         if (!this.isAnimating) return;
         
-        this.updateMolecules();
-        this.findConnections();
-        this.draw();
+        const currentTime = performance.now();
+        const deltaTime = currentTime - this.lastFrameTime;
         
-        requestAnimationFrame(() => this.animate());
+        // Throttle to target FPS
+        if (deltaTime >= this.frameInterval) {
+            this.updateMolecules();
+            this.findConnections();
+            this.draw();
+            this.lastFrameTime = currentTime;
+        }
+        
+        this.animationId = requestAnimationFrame(() => this.animate());
     }
 
     destroy() {
         this.isAnimating = false;
-        if (this.resizeTimeout) {
-            clearTimeout(this.resizeTimeout);
+        
+        // Cancel animation
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
         }
+        
+        // Clear timeouts
+        if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
+        if (this.colorUpdateTimeout) clearTimeout(this.colorUpdateTimeout);
+        
+        // Remove event listeners
+        this.eventListeners.forEach(({ element, event, handler }) => {
+            element.removeEventListener(event, handler);
+        });
+        
+        // Disconnect observers
+        this.observers.forEach(observer => observer.disconnect());
+        
+        // Remove canvas
         if (this.canvas && this.canvas.parentNode) {
             this.canvas.parentNode.removeChild(this.canvas);
         }
+        
+        // Clear arrays
+        this.molecules.length = 0;
+        this.connections.length = 0;
+        this.eventListeners.length = 0;
+        this.observers.length = 0;
     }
 }
 
-// Global instance for settings access
+// Global instance
 let molecularBG = null;
 
-// Initialize
+// Initialize with proper cleanup on page unload
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         molecularBG = new MolecularBackground();
-        window.molecularBG = molecularBG; // Make it globally accessible
+        window.molecularBG = molecularBG;
     });
 } else {
     molecularBG = new MolecularBackground();
-    window.molecularBG = molecularBG; // Make it globally accessible
+    window.molecularBG = molecularBG;
 }
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (molecularBG) {
+        molecularBG.destroy();
+    }
+});

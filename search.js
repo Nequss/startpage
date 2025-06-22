@@ -1,182 +1,235 @@
 /**
- * Handles search input field behaviors with overflow protection and configurable search engines
+ * Search Input Handler - Performance Optimized
  */
 
-// Search engine configurations
-const searchEngines = {
-    google: 'https://www.google.com/search?q=',
-    duckduckgo: 'https://duckduckgo.com/?q=',
-    bing: 'https://www.bing.com/search?q=',
-    startpage: 'https://www.startpage.com/sp/search?query=',
-    brave: 'https://search.brave.com/search?q=',
-    yandex: 'https://yandex.com/search/?text='
-};
+class SearchHandler {
+    constructor() {
+        this.searchEngines = {
+            google: 'https://www.google.com/search?q=',
+            duckduckgo: 'https://duckduckgo.com/?q=',
+            bing: 'https://www.bing.com/search?q=',
+            startpage: 'https://www.startpage.com/sp/search?query=',
+            brave: 'https://search.brave.com/search?q=',
+            yandex: 'https://yandex.com/search/?text='
+        };
 
-const searchInput = document.getElementById('search-input');
+        this.searchInput = document.getElementById('search-input');
+        this.resizeTimeout = null;
+        this.focusTimeout = null;
+        
+        this.init();
+    }
 
-// Get current search engine from settings
-function getCurrentSearchEngine() {
-    const stored = localStorage.getItem('theme-settings');
-    if (stored) {
+    init() {
+        if (!this.searchInput) {
+            console.error('Search input element not found');
+            return;
+        }
+
+        this.setupEventListeners();
+        this.autoFocus();
+        this.resizeInput();
+    }
+
+    getCurrentSearchEngine() {
         try {
-            const settings = JSON.parse(stored);
-            return settings.searchEngine || 'duckduckgo';
+            const stored = localStorage.getItem('theme-settings');
+            if (stored) {
+                const settings = JSON.parse(stored);
+                return settings.searchEngine || 'duckduckgo';
+            }
         } catch (e) {
-            return 'duckduckgo';
+            console.error('Error loading search engine setting:', e);
+        }
+        return 'duckduckgo';
+    }
+
+    getSearchUrl(query) {
+        const engine = this.getCurrentSearchEngine();
+        const baseUrl = this.searchEngines[engine] || this.searchEngines.duckduckgo;
+        return baseUrl + encodeURIComponent(query);
+    }
+
+    autoFocus() {
+        // Auto-focus with delay to ensure page is ready
+        setTimeout(() => {
+            if (this.searchInput && document.activeElement !== this.searchInput) {
+                this.searchInput.focus();
+            }
+        }, 100);
+    }
+
+    calculateMaxWidth() {
+        const containerWidth = window.innerWidth;
+        const promptWidth = 8; // Approximate width of "> cd ~/" in ch units
+        const padding = 4; // Extra padding for safety
+        
+        let maxAvailableWidth;
+        if (containerWidth < 768) {
+            maxAvailableWidth = Math.floor((containerWidth * 0.7) / 12);
+        } else if (containerWidth < 1200) {
+            maxAvailableWidth = Math.floor((containerWidth * 0.6) / 14);
+        } else {
+            maxAvailableWidth = Math.floor((containerWidth * 0.5) / 16);
+        }
+        
+        return Math.max(10, maxAvailableWidth - promptWidth - padding);
+    }
+
+    resizeInput() {
+        if (!this.searchInput) return;
+
+        const content = this.searchInput.value || '';
+        const contentLength = content.length;
+        const maxAvailableWidth = this.calculateMaxWidth();
+        
+        const targetWidth = Math.max(1, contentLength + 1);
+        const finalWidth = Math.min(targetWidth, maxAvailableWidth);
+        
+        this.searchInput.style.width = finalWidth + 'ch';
+        
+        // Scroll to end if content overflows
+        if (contentLength > maxAvailableWidth - 2) {
+            this.searchInput.scrollLeft = this.searchInput.scrollWidth;
         }
     }
-    return 'duckduckgo';
-}
 
-// Get search URL for current engine
-function getSearchUrl(query) {
-    const engine = getCurrentSearchEngine();
-    const baseUrl = searchEngines[engine] || searchEngines.duckduckgo;
-    return baseUrl + encodeURIComponent(query);
-}
+    handleSearch(query) {
+        const trimmedQuery = query.trim();
+        if (!trimmedQuery) return;
 
-// Auto-focus the input when page loads
-window.addEventListener('load', () => {
-    searchInput.focus();
-});
-
-// Dynamically resize input based on content with overflow protection
-function resizeInput() {
-    const content = searchInput.value || '';
-    const contentLength = content.length;
-    
-    // Calculate available space more accurately
-    const containerWidth = window.innerWidth;
-    const promptWidth = 8; // Approximate width of "> cd ~/" in ch units
-    const blinkingWidth = 1; // Width of the blinking cursor
-    const padding = 4; // Extra padding for safety
-    
-    // Calculate max width based on screen size
-    let maxAvailableWidth;
-    if (containerWidth < 768) {
-        // Mobile devices
-        maxAvailableWidth = Math.floor((containerWidth * 0.7) / 12); // Smaller char width estimate
-    } else if (containerWidth < 1200) {
-        // Tablets and small desktops
-        maxAvailableWidth = Math.floor((containerWidth * 0.6) / 14);
-    } else {
-        // Large screens
-        maxAvailableWidth = Math.floor((containerWidth * 0.5) / 16);
-    }
-    
-    // Subtract prompt and cursor width
-    maxAvailableWidth = Math.max(10, maxAvailableWidth - promptWidth - blinkingWidth - padding);
-    
-    // Set width with limits
-    const targetWidth = Math.max(1, contentLength + 1);
-    const finalWidth = Math.min(targetWidth, maxAvailableWidth);
-    
-    searchInput.style.width = finalWidth + 'ch';
-    
-    // If content is too long, scroll to end
-    if (contentLength > maxAvailableWidth - 2) {
-        searchInput.scrollLeft = searchInput.scrollWidth;
-    }
-}
-
-// Handle input changes to resize the field
-searchInput.addEventListener('input', resizeInput);
-
-// Handle search on Enter key with configurable search engine
-searchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && searchInput.value.trim()) {
-        const query = searchInput.value.trim();
-        
-        // Check if it's a URL (simple check)
-        if (query.includes('.') && !query.includes(' ') && 
-            (query.startsWith('http') || query.includes('.'))) {
-            // Treat as URL
-            let url = query;
-            if (!query.startsWith('http')) {
-                url = 'https://' + query;
+        // Simple URL detection
+        if (this.isUrl(trimmedQuery)) {
+            let url = trimmedQuery;
+            if (!trimmedQuery.startsWith('http')) {
+                url = 'https://' + trimmedQuery;
             }
             window.open(url, '_blank');
         } else {
-            // Treat as search query
-            const searchUrl = getSearchUrl(query);
+            const searchUrl = this.getSearchUrl(trimmedQuery);
             window.open(searchUrl, '_blank');
         }
         
-        searchInput.value = ''; // Clear after search
-        resizeInput(); // Reset width after clearing
+        this.searchInput.value = '';
+        this.resizeInput();
     }
-});
 
-// Re-focus when clicking anywhere on the page (but not on settings or links)
-document.addEventListener('click', (e) => {
-    // Don't refocus if clicking on:
-    // - The search input itself
-    // - Any link
-    // - Settings modal or its contents
-    // - Any button or interactive element
-    if (e.target !== searchInput && 
-        !e.target.closest('a') && 
-        !e.target.closest('.settings-modal') &&
-        !e.target.closest('.settings-icon') &&
-        !e.target.closest('button') &&
-        !e.target.closest('input') &&
-        !e.target.closest('select')) {
+    isUrl(text) {
+        return text.includes('.') && 
+               !text.includes(' ') && 
+               (text.startsWith('http') || 
+                text.match(/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/));
+    }
+
+    setupEventListeners() {
+        // Input changes
+        this.searchInput.addEventListener('input', () => {
+            this.resizeInput();
+        });
+
+        // Enter key for search
+        this.searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && this.searchInput.value.trim()) {
+                this.handleSearch(this.searchInput.value);
+            }
+            
+            // Keyboard shortcuts
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                this.searchInput.value = '';
+                this.resizeInput();
+            }
+            
+            if (e.key === 'Escape') {
+                this.searchInput.value = '';
+                this.resizeInput();
+            }
+        });
+
+        // Window resize with debouncing
+        window.addEventListener('resize', () => {
+            if (this.resizeTimeout) {
+                clearTimeout(this.resizeTimeout);
+            }
+            
+            this.resizeTimeout = setTimeout(() => {
+                this.resizeInput();
+            }, 100);
+        });
+
+        // Re-focus on page clicks (excluding interactive elements)
+        document.addEventListener('click', (e) => {
+            const shouldRefocus = !e.target.closest('a, button, input, select, .settings-modal, .settings-icon');
+            
+            if (shouldRefocus && e.target !== this.searchInput) {
+                if (this.focusTimeout) {
+                    clearTimeout(this.focusTimeout);
+                }
+                
+                this.focusTimeout = setTimeout(() => {
+                    if (document.activeElement !== this.searchInput) {
+                        this.searchInput.focus();
+                    }
+                }, 10);
+            }
+        });
+
+        // Listen for search engine changes
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme-settings') {
+                // Search engine setting might have changed
+                // No additional action needed as getSearchUrl reads from localStorage
+            }
+        });
+
+        // Page load focus
+        window.addEventListener('load', () => {
+            this.autoFocus();
+        });
+    }
+
+    // Cleanup method for memory management
+    destroy() {
+        if (this.resizeTimeout) {
+            clearTimeout(this.resizeTimeout);
+        }
         
-        // Small delay to ensure other click handlers execute first
-        setTimeout(() => {
-            searchInput.focus();
-        }, 10);
+        if (this.focusTimeout) {
+            clearTimeout(this.focusTimeout);
+        }
     }
-});
-
-// Handle window resize to recalculate input width
-window.addEventListener('resize', () => {
-    // Debounce resize events
-    clearTimeout(window.resizeTimeout);
-    window.resizeTimeout = setTimeout(() => {
-        resizeInput();
-    }, 100);
-});
-
-// Listen for search engine changes from settings
-window.addEventListener('storage', (e) => {
-    if (e.key === 'theme-settings') {
-        // Search engine might have changed, but no action needed here
-        // The getSearchUrl function will automatically use the new setting
-    }
-});
-
-// Keyboard shortcuts
-searchInput.addEventListener('keydown', (e) => {
-    // Ctrl/Cmd + K to clear input
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        searchInput.value = '';
-        resizeInput();
-    }
-    
-    // Escape to clear input
-    if (e.key === 'Escape') {
-        searchInput.value = '';
-        resizeInput();
-    }
-});
-
-// Initialize proper width on load
-document.addEventListener('DOMContentLoaded', () => {
-    resizeInput();
-});
-
-// Fallback initialization
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', resizeInput);
-} else {
-    resizeInput();
 }
 
-// Export for use in other modules if needed
+// Initialize search handler
+let searchHandler = null;
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        searchHandler = new SearchHandler();
+        window.searchHandler = searchHandler;
+    });
+} else {
+    searchHandler = new SearchHandler();
+    window.searchHandler = searchHandler;
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (searchHandler) {
+        searchHandler.destroy();
+    }
+});
+
+// Export utilities for backward compatibility
 window.searchUtils = {
-    getCurrentSearchEngine,
-    getSearchUrl,
-    searchEngines
+    getCurrentSearchEngine: () => searchHandler?.getCurrentSearchEngine() || 'duckduckgo',
+    getSearchUrl: (query) => searchHandler?.getSearchUrl(query) || `https://duckduckgo.com/?q=${encodeURIComponent(query)}`,
+    searchEngines: {
+        google: 'https://www.google.com/search?q=',
+        duckduckgo: 'https://duckduckgo.com/?q=',
+        bing: 'https://www.bing.com/search?q=',
+        startpage: 'https://www.startpage.com/sp/search?query=',
+        brave: 'https://search.brave.com/search?q=',
+        yandex: 'https://yandex.com/search/?text='
+    }
 };
