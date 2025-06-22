@@ -411,6 +411,93 @@ input:checked + .toggle-slider:before { transform: translateX(26px); }
     font-size: 0.9rem;
 }
 
+/* Image Settings */
+.image-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.image-preview-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.image-preview {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 12px;
+    object-fit: contain;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.image-preview:hover {
+    border-color: var(--border-accent);
+    transform: scale(1.05);
+}
+
+.image-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.upload-btn {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+    cursor: pointer;
+    background: var(--color-accent);
+    border: 2px solid var(--border-accent);
+    color: var(--color-fg);
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-family: "Fira Code", monospace;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.upload-btn:hover {
+    background: var(--color-accent-hover);
+    transform: translateY(-1px);
+}
+
+.upload-btn input[type="file"] {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+}
+
+.reset-image-btn {
+    background: var(--color-danger);
+    border-color: var(--border-danger);
+    color: var(--color-fg);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: "Fira Code", monospace;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.reset-image-btn:hover {
+    background: var(--color-danger-hover);
+    transform: translateY(-1px);
+}
+
+.image-size-container {
+    width: 100%;
+    max-width: 400px;
+}
+
 .theme-grid, .search-engine-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -650,6 +737,7 @@ button:hover, .add-link-btn:hover {
     object-fit: contain;
     position: relative;
     z-index: 3;
+    transition: all 0.3s ease;
 }
 
 .head {
@@ -837,6 +925,15 @@ a:hover { color: var(--color-link-hover); }
     }
     
     #search-input { max-width: calc(100vw - 8ch); }
+    
+    .image-preview-container {
+        padding: 15px;
+    }
+    
+    .image-preview {
+        max-width: 150px;
+        max-height: 150px;
+    }
 }
 
 @media (min-width: 601px) and (max-width: 900px) {
@@ -877,38 +974,31 @@ a:hover { color: var(--color-link-hover); }
     .container.no-image .bookmarks {
         justify-self: center;
         margin: 0 auto;
-        /* Dynamic columns based on screen width */
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         min-width: 100%;
         max-width: none;
         width: 100%;
         gap: 2vw;
-        /* Ensure single row on ultra-wide */
         grid-template-rows: 1fr;
     }
 }
 
-/* For even wider screens (1800px+) */
 @media (min-width: 1800px) {
     .container.no-image .bookmarks {
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 1.5vw;
-        /* Force single row with smaller minimum width */
         grid-auto-rows: 1fr;
     }
 }
 
-/* For ultra-wide screens (2200px+) */
 @media (min-width: 2200px) {
     .container.no-image .bookmarks {
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: 1.2vw;
-        /* Maximum utilization of screen width */
         padding: 0 5vw;
     }
 }
 
-/* For super ultra-wide screens (2800px+) */
 @media (min-width: 2800px) {
     .container.no-image .bookmarks {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

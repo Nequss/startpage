@@ -54,7 +54,7 @@
                                 <div class="range-display" id="connection-distance-display">140px</div>
                             </div>
                             
-                            <div class="setting-group">r
+                            <div class="setting-group">
                                 <h4>Movement Speed</h4>
                                 <input type="range" class="setting-input" id="movement-speed" min="0.5" max="10" step="0.1" value="1.5">
                                 <div class="range-display" id="movement-speed-display">1.5</div>
@@ -93,7 +93,31 @@
                                     <input type="checkbox" id="show-image" checked>
                                     <span class="toggle-slider"></span>
                                 </label>
-                                <span class="toggle-label">Show Cat Image</span>
+                                <span class="toggle-label">Show Image</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-group">
+                            <h4>Image Settings</h4>
+                            <div class="image-settings">
+                                <div class="image-preview-container">
+                                    <img id="image-preview" class="image-preview" src="cat.gif" alt="Current Image">
+                                    <div class="image-upload-container">
+                                        <label class="upload-btn">
+                                            Upload Custom Image
+                                            <input type="file" id="image-upload" accept="image/*,video/*,.gif">
+                                        </label>
+                                        <button class="reset-image-btn" id="reset-image">Reset to Default</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="image-size-container">
+                                    <div class="setting-group">
+                                        <h4>Image Size</h4>
+                                        <input type="range" class="setting-input" id="image-size" min="50" max="150" value="100">
+                                        <div class="range-display" id="image-size-display">100%</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -197,7 +221,7 @@
     <div class="container" id="main-container">
         <div class="left-container" id="left-container">
             <div class="gif">
-                <img src="cat.gif" />
+                <img id="main-image" src="cat.gif" />
             </div>
         </div>
 

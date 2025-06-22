@@ -1,5 +1,5 @@
 /**
- * Settings Management System - Performance Optimized
+ * Settings Management System - Performance Optimized with Image Management
  */
 
 class SettingsManager {
@@ -48,7 +48,9 @@ class SettingsManager {
         this.defaultThemeSettings = {
             theme: 'default',
             showImage: true,
-            searchEngine: 'duckduckgo'
+            searchEngine: 'duckduckgo',
+            customImage: null,
+            imageSize: 70
         };
         
         this.init();
@@ -61,10 +63,12 @@ class SettingsManager {
         this.setupEventListeners();
         this.applyTheme();
         this.toggleImage();
+        this.applyImageSettings();
         
         setTimeout(() => {
             this.setupMoleculeControls();
             this.setupThemeControls();
+            this.setupImageControls();
         }, 100);
     }
 
@@ -109,6 +113,89 @@ class SettingsManager {
         } else {
             leftContainer.classList.add('hidden');
             mainContainer.classList.add('no-image');
+        }
+    }
+
+    applyImageSettings() {
+        const mainImage = document.getElementById('main-image');
+        const previewImage = document.getElementById('image-preview');
+        
+        if (mainImage && previewImage) {
+            // Apply custom image if available
+            if (this.themeSettings.customImage) {
+                mainImage.src = this.themeSettings.customImage;
+                previewImage.src = this.themeSettings.customImage;
+            } else {
+                mainImage.src = 'cat.gif';
+                previewImage.src = 'cat.gif';
+            }
+            
+            // Apply image size
+            const sizePercentage = this.themeSettings.imageSize;
+            mainImage.style.transform = `scale(${sizePercentage / 100})`;
+            mainImage.style.transformOrigin = 'center';
+        }
+    }
+
+    setupImageControls() {
+        // Image upload
+        const imageUpload = document.getElementById('image-upload');
+        const imagePreview = document.getElementById('image-preview');
+        const resetImageBtn = document.getElementById('reset-image');
+        const imageSizeSlider = document.getElementById('image-size');
+        const imageSizeDisplay = document.getElementById('image-size-display');
+
+        if (imageUpload) {
+            imageUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    // Validate file type
+                    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
+                    if (!validTypes.includes(file.type)) {
+                        alert('Please select a valid image or video file (JPEG, PNG, GIF, WebP, MP4, WebM)');
+                        return;
+                    }
+
+                    // Validate file size (max 10MB)
+                    if (file.size > 10 * 1024 * 1024) {
+                        alert('File size must be less than 10MB');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const imageData = event.target.result;
+                        this.themeSettings.customImage = imageData;
+                        this.saveThemeSettings();
+                        this.applyImageSettings();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        if (resetImageBtn) {
+            resetImageBtn.addEventListener('click', () => {
+                if (confirm('Reset to default cat image?')) {
+                    this.themeSettings.customImage = null;
+                    this.saveThemeSettings();
+                    this.applyImageSettings();
+                }
+            });
+        }
+
+        if (imageSizeSlider && imageSizeDisplay) {
+            // Load current value
+            imageSizeSlider.value = this.themeSettings.imageSize;
+            imageSizeDisplay.textContent = this.themeSettings.imageSize + '%';
+
+            imageSizeSlider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                imageSizeDisplay.textContent = value + '%';
+                this.themeSettings.imageSize = value;
+                this.saveThemeSettings();
+                this.applyImageSettings();
+            });
         }
     }
 
@@ -333,6 +420,8 @@ class SettingsManager {
 
     renderBookmarks() {
         const container = document.getElementById('bookmarks-container');
+        if (!container) return;
+        
         container.innerHTML = '';
 
         this.data.categories.forEach(category => {
@@ -364,17 +453,25 @@ class SettingsManager {
 
     openSettings() {
         this.renderSettingsModal();
-        document.getElementById('settings-modal').classList.add('active');
-        document.body.style.overflow = 'hidden';
+        const modal = document.getElementById('settings-modal');
+        if (modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
     }
 
     closeSettings() {
-        document.getElementById('settings-modal').classList.remove('active');
-        document.body.style.overflow = '';
+        const modal = document.getElementById('settings-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
     }
 
     renderSettingsModal() {
         const container = document.getElementById('categories-container');
+        if (!container) return;
+        
         container.innerHTML = '';
 
         this.data.categories.forEach((category, categoryIndex) => {
@@ -487,14 +584,16 @@ class SettingsManager {
         
         // Show success feedback
         const saveBtn = document.getElementById('save-settings');
-        const originalText = saveBtn.textContent;
-        saveBtn.textContent = 'Saved!';
-        saveBtn.style.background = 'var(--color-success)';
-        
-        setTimeout(() => {
-            saveBtn.textContent = originalText;
-            saveBtn.style.background = '';
-        }, 1500);
+        if (saveBtn) {
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = 'Saved!';
+            saveBtn.style.background = 'var(--color-success)';
+            
+            setTimeout(() => {
+                saveBtn.textContent = originalText;
+                saveBtn.style.background = '';
+            }, 1500);
+        }
     }
 
     resetSettings() {
@@ -508,6 +607,7 @@ class SettingsManager {
         this.renderSettingsModal();
         this.applyTheme();
         this.toggleImage();
+        this.applyImageSettings();
         
         // Reset molecule settings if available
         if (window.molecularBG) {
@@ -518,6 +618,7 @@ class SettingsManager {
         }
         
         this.setupThemeControls();
+        this.setupImageControls();
     }
 }
 
