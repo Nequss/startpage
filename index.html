@@ -8,8 +8,194 @@
 </head>
 
 <body>
-    <div class="container">
-        <div class="left-container">
+    <!-- Settings Icon -->
+    <div class="settings-icon" id="settings-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="settings-modal" id="settings-modal">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2>Settings</h2>
+                <button class="close-btn" id="close-settings">&times;</button>
+            </div>
+            <div class="settings-body">
+                <!-- Settings Tabs -->
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-tab="bookmarks">Bookmarks</button>
+                    <button class="settings-tab" data-tab="molecules">Molecules</button>
+                    <button class="settings-tab" data-tab="theme">Theme</button>
+                    <button class="settings-tab" data-tab="search">Search</button>
+                </div>
+
+                <!-- Bookmarks Tab -->
+                <div id="bookmarks-tab" class="tab-content active">
+                    <div id="categories-container"></div>
+                    <button class="add-category-btn" id="add-category">+ Add Category</button>
+                </div>
+
+                <!-- Molecules Tab -->
+                <div id="molecules-tab" class="tab-content">
+                    <div class="molecule-settings-container">
+                        <div class="molecule-settings">
+                            <div class="setting-group">
+                                <h4>Molecule Count</h4>
+                                <input type="range" class="setting-input" id="molecule-count" min="50" max="300" value="120">
+                                <div class="range-display" id="molecule-count-display">120</div>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <h4>Connection Distance</h4>
+                                <input type="range" class="setting-input" id="connection-distance" min="80" max="200" value="140">
+                                <div class="range-display" id="connection-distance-display">140px</div>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <h4>Movement Speed</h4>
+                                <input type="range" class="setting-input" id="movement-speed" min="0.5" max="3" step="0.1" value="1.5">
+                                <div class="range-display" id="movement-speed-display">1.5</div>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <h4>Mouse Repel Force</h4>
+                                <input type="range" class="setting-input" id="mouse-force" min="50" max="200" value="120">
+                                <div class="range-display" id="mouse-force-display">120</div>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <h4>Connection Thickness</h4>
+                                <input type="range" class="setting-input" id="connection-thickness" min="1" max="5" step="0.5" value="2">
+                                <div class="range-display" id="connection-thickness-display">2px</div>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <h4>Connection Opacity</h4>
+                                <input type="range" class="setting-input" id="connection-opacity" min="0.1" max="0.8" step="0.1" value="0.3">
+                                <div class="range-display" id="connection-opacity-display">0.3</div>
+                            </div>
+                        </div>
+                        
+                        <button class="reset-btn" id="reset-molecules">Reset Molecule Settings</button>
+                    </div>
+                </div>
+
+                <!-- Theme Tab -->
+                <div id="theme-tab" class="tab-content">
+                    <div class="theme-settings">
+                        <div class="setting-group">
+                            <h4>Image Display</h4>
+                            <div class="toggle-container">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="show-image" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span class="toggle-label">Show Cat Image</span>
+                            </div>
+                        </div>
+
+                        <div class="setting-group">
+                            <h4>Color Themes</h4>
+                            <div class="theme-grid">
+                                <div class="theme-option active" data-theme="default">
+                                    <div class="theme-preview">
+                                        <div class="color-dot" style="background: #1A1A1A;"></div>
+                                        <div class="color-dot" style="background: #8F9191;"></div>
+                                        <div class="color-dot" style="background: #ffffff;"></div>
+                                    </div>
+                                    <span>Default</span>
+                                </div>
+
+                                <div class="theme-option" data-theme="nord">
+                                    <div class="theme-preview">
+                                        <div class="color-dot" style="background: #2E3440;"></div>
+                                        <div class="color-dot" style="background: #81A1C1;"></div>
+                                        <div class="color-dot" style="background: #ECEFF4;"></div>
+                                    </div>
+                                    <span>Nord</span>
+                                </div>
+
+                                <div class="theme-option" data-theme="dracula">
+                                    <div class="theme-preview">
+                                        <div class="color-dot" style="background: #1e1f29;"></div>
+                                        <div class="color-dot" style="background: #BD93F9;"></div>
+                                        <div class="color-dot" style="background: #F8F8F2;"></div>
+                                    </div>
+                                    <span>Dracula</span>
+                                </div>
+
+                                <div class="theme-option" data-theme="monokai">
+                                    <div class="theme-preview">
+                                        <div class="color-dot" style="background: #272822;"></div>
+                                        <div class="color-dot" style="background: #A6E22E;"></div>
+                                        <div class="color-dot" style="background: #F8F8F2;"></div>
+                                    </div>
+                                    <span>Monokai</span>
+                                </div>
+
+                                <div class="theme-option" data-theme="ocean">
+                                    <div class="theme-preview">
+                                        <div class="color-dot" style="background: #0F111A;"></div>
+                                        <div class="color-dot" style="background: #4F97A3;"></div>
+                                        <div class="color-dot" style="background: #C7D0D9;"></div>
+                                    </div>
+                                    <span>Ocean</span>
+                                </div>
+
+                                <div class="theme-option" data-theme="sunset">
+                                    <div class="theme-preview">
+                                        <div class="color-dot" style="background: #1A0E0A;"></div>
+                                        <div class="color-dot" style="background: #E67E22;"></div>
+                                        <div class="color-dot" style="background: #FDF2E9;"></div>
+                                    </div>
+                                    <span>Sunset</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Tab -->
+                <div id="search-tab" class="tab-content">
+                    <div class="search-settings">
+                        <div class="setting-group">
+                            <h4>Default Search Engine</h4>
+                            <div class="search-engine-grid">
+                                <div class="search-option active" data-engine="google">
+                                    <span>Google</span>
+                                </div>
+                                <div class="search-option" data-engine="duckduckgo">
+                                    <span>DuckDuckGo</span>
+                                </div>
+                                <div class="search-option" data-engine="bing">
+                                    <span>Bing</span>
+                                </div>
+                                <div class="search-option" data-engine="startpage">
+                                    <span>Startpage</span>
+                                </div>
+                                <div class="search-option" data-engine="brave">
+                                    <span>Brave Search</span>
+                                </div>
+                                <div class="search-option" data-engine="yandex">
+                                    <span>Yandex</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-footer">
+                <button class="save-btn" id="save-settings">Save</button>
+                <button class="reset-btn" id="reset-settings">Reset All to Default</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="main-container">
+        <div class="left-container" id="left-container">
             <div class="gif">
                 <img src="cat.gif" />
             </div>
@@ -24,51 +210,14 @@
                 </p>
             </div>
 
-            <div class="bookmarks">
-                <div class="category">
-                    <div class="links">
-                        <li class="title">~/util</li>
-                        <li><a href="https://www.timeanddate.com/worldclock/poland/warsaw" rel="noopener noreferrer">weather</a></li>
-                        <li><a href="https://workspace.google.com/products/sheets/" rel="noopener noreferrer">sheets</a></li>
-                        <li><a href="https://hackmd.io/login" rel="noopener noreferrer">notes</a></li>
-                        <li><a href="https://translate.google.com/" rel="noopener noreferrer">translate</a></li>
-                    </div>
-                </div>
-
-                <div class="category">
-                    <div class="links">
-                        <li class="title">~/mail</li>
-                        <li><a href="https://gmail.com" rel="noopener noreferrer">gmail</a></li>
-                        <li><a href="https://mail.proton.me/" rel="noopener noreferrer">protonmail</a></li>
-                        <li><a href="https://temp-mail.org/" rel="noopener noreferrer">tempmail</a></li>
-                        <li><a href="https://tutanota.com/" rel="noopener noreferrer">tutanota</a></li>
-                    </div>
-                </div>
-
-                <div class="category">
-                    <div class="links">
-                        <li class="title">~/ai</li>
-                        <li><a href="https://www.perplexity.ai/" rel="noopener noreferrer">perplexity</a></li>
-                        <li><a href="https://chat.openai.com/" rel="noopener noreferrer">chatgpt</a></li>
-                        <li><a href="https://claude.ai/" rel="noopener noreferrer">claude</a></li>
-                        <li><a href="https://gemini.google.com/" rel="noopener noreferrer">gemini</a></li>
-                    </div>
-                </div>
-
-                <div class="category">
-                    <div class="links">
-                        <li class="title">~/music</li>
-                        <li><a href="https://soundcloud.com/" rel="noopener noreferrer">soundcloud</a></li>             
-                        <li><a href="https://music.youtube.com/" rel="noopener noreferrer">yt music</a></li>
-                        <li><a href="https://open.spotify.com/" rel="noopener noreferrer">spotify</a></li>
-                        <li><a href="https://bandcamp.com/" rel="noopener noreferrer">bandcamp</a></li>
-                    </div>
-                </div>
+            <div class="bookmarks" id="bookmarks-container">
+                <!-- Bookmarks will be dynamically generated -->
             </div>
         </div>
     </div>
     
     <script src="molecules.js"></script>
     <script src="search.js"></script>
+    <script src="settings.js"></script>
 </body>
 </html>
