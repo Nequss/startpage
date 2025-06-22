@@ -854,7 +854,7 @@ a:hover { color: var(--color-link-hover); }
     .link-editor { grid-template-columns: 1fr 2fr auto; gap: 8px; }
 }
 
-/* Wide Screen Optimization for No-Image Mode */
+/* Wide Screen Optimization for No-Image Mode - Enhanced */
 @media (min-width: 1400px) {
     .container.no-image {
         justify-content: center;
@@ -863,7 +863,8 @@ a:hover { color: var(--color-link-hover); }
     }
     
     .container.no-image .right-container {
-        max-width: 1000px;
+        max-width: none;
+        width: 90%;
         margin: 0 auto;
     }
     
@@ -876,24 +877,42 @@ a:hover { color: var(--color-link-hover); }
     .container.no-image .bookmarks {
         justify-self: center;
         margin: 0 auto;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        min-width: 800px;
-        max-width: 1200px;
-        gap: 1.5vw;
+        /* Dynamic columns based on screen width */
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        min-width: 100%;
+        max-width: none;
+        width: 100%;
+        gap: 2vw;
+        /* Ensure single row on ultra-wide */
+        grid-template-rows: 1fr;
     }
 }
 
+/* For even wider screens (1800px+) */
 @media (min-width: 1800px) {
     .container.no-image .bookmarks {
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        max-width: 1400px;
-        gap: 2vw;
+        gap: 1.5vw;
+        /* Force single row with smaller minimum width */
+        grid-auto-rows: 1fr;
     }
 }
 
+/* For ultra-wide screens (2200px+) */
 @media (min-width: 2200px) {
     .container.no-image .bookmarks {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        max-width: 1600px;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1.2vw;
+        /* Maximum utilization of screen width */
+        padding: 0 5vw;
+    }
+}
+
+/* For super ultra-wide screens (2800px+) */
+@media (min-width: 2800px) {
+    .container.no-image .bookmarks {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1vw;
+        padding: 0 8vw;
     }
 }

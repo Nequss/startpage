@@ -74,8 +74,41 @@ class MolecularBackground {
         this.settings = { ...this.settings, ...newSettings };
         this.saveSettings();
         
+        // Handle specific setting updates
         if (newSettings.numMolecules && newSettings.numMolecules !== this.molecules.length) {
             this.createMolecules();
+        }
+        
+        if (newSettings.baseVelocity !== undefined) {
+            this.updateMoleculeVelocities();
+        }
+    }
+
+    updateMoleculeVelocities() {
+        // Update existing molecules' original velocities when speed setting changes
+        for (let i = 0; i < this.molecules.length; i++) {
+            const molecule = this.molecules[i];
+            
+            // Generate new base velocities with updated speed
+            const vx = (Math.random() - 0.5) * this.settings.baseVelocity;
+            const vy = (Math.random() - 0.5) * this.settings.baseVelocity;
+            
+            // Update original velocities (what molecules return to)
+            molecule.originalVx = vx;
+            molecule.originalVy = vy;
+            
+            // Gradually adjust current velocities towards new base
+            const currentSpeed = Math.sqrt(molecule.vx * molecule.vx + molecule.vy * molecule.vy);
+            const targetSpeed = this.settings.baseVelocity;
+            
+            if (currentSpeed > 0) {
+                const ratio = targetSpeed / currentSpeed;
+                molecule.vx *= ratio;
+                molecule.vy *= ratio;
+            } else {
+                molecule.vx = vx;
+                molecule.vy = vy;
+            }
         }
     }
 

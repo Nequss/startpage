@@ -247,34 +247,24 @@ class SettingsManager {
 
         // Molecule settings controls
         const controls = {
-            'molecule-count': { display: 'molecule-count-display', suffix: '' },
-            'connection-distance': { display: 'connection-distance-display', suffix: 'px' },
-            'movement-speed': { display: 'movement-speed-display', suffix: '' },
-            'mouse-force': { display: 'mouse-force-display', suffix: '' },
-            'connection-thickness': { display: 'connection-thickness-display', suffix: 'px' },
-            'connection-opacity': { display: 'connection-opacity-display', suffix: '' }
+            'molecule-count': { display: 'molecule-count-display', suffix: '', setting: 'numMolecules' },
+            'connection-distance': { display: 'connection-distance-display', suffix: 'px', setting: 'maxDistance' },
+            'movement-speed': { display: 'movement-speed-display', suffix: '', setting: 'baseVelocity' },
+            'mouse-force': { display: 'mouse-force-display', suffix: '', setting: 'mouseRepelForce' },
+            'connection-thickness': { display: 'connection-thickness-display', suffix: 'px', setting: 'connectionThickness' },
+            'connection-opacity': { display: 'connection-opacity-display', suffix: '', setting: 'connectionOpacity' }
         };
 
         Object.keys(controls).forEach(controlId => {
             const control = document.getElementById(controlId);
             const display = document.getElementById(controls[controlId].display);
             const suffix = controls[controlId].suffix;
+            const settingKey = controls[controlId].setting;
             
             if (control && display) {
-                if (window.molecularBG) {
-                    const settingsMap = {
-                        'molecule-count': 'numMolecules',
-                        'connection-distance': 'maxDistance',
-                        'movement-speed': 'baseVelocity',
-                        'mouse-force': 'mouseRepelForce',
-                        'connection-thickness': 'connectionThickness',
-                        'connection-opacity': 'connectionOpacity'
-                    };
-                    
-                    const settingKey = settingsMap[controlId];
-                    if (settingKey && window.molecularBG.settings[settingKey] !== undefined) {
-                        control.value = window.molecularBG.settings[settingKey];
-                    }
+                // Load current value
+                if (window.molecularBG && window.molecularBG.settings[settingKey] !== undefined) {
+                    control.value = window.molecularBG.settings[settingKey];
                 }
                 
                 display.textContent = control.value + suffix;
@@ -284,24 +274,18 @@ class SettingsManager {
                     display.textContent = value + suffix;
                     
                     if (window.molecularBG) {
-                        const settingsMap = {
-                            'molecule-count': 'numMolecules',
-                            'connection-distance': 'maxDistance',
-                            'movement-speed': 'baseVelocity',
-                            'mouse-force': 'mouseRepelForce',
-                            'connection-thickness': 'connectionThickness',
-                            'connection-opacity': 'connectionOpacity'
-                        };
+                        window.molecularBG.updateSettings({ [settingKey]: value });
                         
-                        const settingKey = settingsMap[controlId];
-                        if (settingKey) {
-                            window.molecularBG.updateSettings({ [settingKey]: value });
+                        // Special handling for movement speed - update existing molecules
+                        if (settingKey === 'baseVelocity') {
+                            window.molecularBG.updateMoleculeVelocities();
                         }
                     }
                 });
             }
         });
 
+        // Reset molecules button
         const resetMoleculesBtn = document.getElementById('reset-molecules');
         if (resetMoleculesBtn) {
             resetMoleculesBtn.addEventListener('click', () => {
@@ -311,26 +295,16 @@ class SettingsManager {
                         window.molecularBG.saveSettings();
                         window.molecularBG.createMolecules();
                         
+                        // Update all control displays
                         Object.keys(controls).forEach(controlId => {
                             const control = document.getElementById(controlId);
                             const display = document.getElementById(controls[controlId].display);
                             const suffix = controls[controlId].suffix;
+                            const settingKey = controls[controlId].setting;
                             
-                            if (control && display) {
-                                const settingsMap = {
-                                    'molecule-count': 'numMolecules',
-                                    'connection-distance': 'maxDistance',
-                                    'movement-speed': 'baseVelocity',
-                                    'mouse-force': 'mouseRepelForce',
-                                    'connection-thickness': 'connectionThickness',
-                                    'connection-opacity': 'connectionOpacity'
-                                };
-                                
-                                const settingKey = settingsMap[controlId];
-                                if (settingKey && window.molecularBG.defaultSettings[settingKey] !== undefined) {
-                                    control.value = window.molecularBG.defaultSettings[settingKey];
-                                    display.textContent = window.molecularBG.defaultSettings[settingKey] + suffix;
-                                }
+                            if (control && display && window.molecularBG.defaultSettings[settingKey] !== undefined) {
+                                control.value = window.molecularBG.defaultSettings[settingKey];
+                                display.textContent = window.molecularBG.defaultSettings[settingKey] + suffix;
                             }
                         });
                     }
