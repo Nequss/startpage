@@ -5,6 +5,23 @@
     <meta charset="UTF-8">
     <title>~/startpage</title>
     <link rel="stylesheet" type="text/css" href="style.css">
+    <!-- Prevent flash by applying theme immediately -->
+    <script>
+        (function() {
+            try {
+                const stored = localStorage.getItem('theme-settings');
+                if (stored) {
+                    const settings = JSON.parse(stored);
+                    if (settings.theme && settings.theme !== 'default') {
+                        document.documentElement.setAttribute('data-theme', settings.theme);
+                        document.body.setAttribute('data-theme', settings.theme);
+                    }
+                }
+            } catch (e) {
+                console.error('Error applying initial theme:', e);
+            }
+        })();
+    </script>
 </head>
 
 <body>
@@ -101,7 +118,7 @@
                             <h4>Image Settings</h4>
                             <div class="image-settings">
                                 <div class="image-preview-container">
-                                    <img id="image-preview" class="image-preview" src="cat.gif" alt="Current Image">
+                                    <img id="image-preview" class="image-preview" src="" alt="Current Image">
                                     <div class="image-upload-container">
                                         <label class="upload-btn">
                                             Upload Custom Image
@@ -221,7 +238,7 @@
     <div class="container" id="main-container">
         <div class="left-container" id="left-container">
             <div class="gif">
-                <img id="main-image" src="cat.gif" />
+                <img id="main-image" src="" style="opacity: 0;" />
             </div>
         </div>
 
@@ -240,8 +257,9 @@
         </div>
     </div>
     
+    <!-- Load scripts in specific order -->
     <script src="molecules.js"></script>
-    <script src="search.js"></script>
     <script src="settings.js"></script>
+    <script src="search.js"></script>
 </body>
 </html>

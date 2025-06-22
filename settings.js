@@ -53,12 +53,68 @@ class SettingsManager {
             imageSize: 70
         };
         
+        // Load settings immediately to prevent flash
+        this.loadThemeSettings();
+        this.preloadImageSettings();
+        
         this.init();
+    }
+
+    preloadImageSettings() {
+        // Apply image settings immediately to prevent flash
+        const mainImage = document.getElementById('main-image');
+        const previewImage = document.getElementById('image-preview');
+        
+        if (mainImage) {
+            if (this.themeSettings.customImage) {
+                mainImage.src = this.themeSettings.customImage;
+            } else {
+                mainImage.src = 'cat.gif';
+            }
+            
+            // Apply image size immediately
+            const sizePercentage = this.themeSettings.imageSize;
+            mainImage.style.transform = `scale(${sizePercentage / 100})`;
+            mainImage.style.transformOrigin = 'center';
+            
+            // Show image with fade-in effect once loaded
+            if (mainImage.complete) {
+                mainImage.style.opacity = '1';
+            } else {
+                mainImage.onload = () => {
+                    mainImage.style.transition = 'opacity 0.3s ease';
+                    mainImage.style.opacity = '1';
+                };
+            }
+        }
+        
+        if (previewImage) {
+            if (this.themeSettings.customImage) {
+                previewImage.src = this.themeSettings.customImage;
+            } else {
+                previewImage.src = 'cat.gif';
+            }
+        }
+        
+        // Apply image visibility immediately
+        this.toggleImageImmediate();
+    }
+
+    toggleImageImmediate() {
+        const leftContainer = document.getElementById('left-container');
+        const mainContainer = document.getElementById('main-container');
+        
+        if (this.themeSettings.showImage) {
+            if (leftContainer) leftContainer.classList.remove('hidden');
+            if (mainContainer) mainContainer.classList.remove('no-image');
+        } else {
+            if (leftContainer) leftContainer.classList.add('hidden');
+            if (mainContainer) mainContainer.classList.add('no-image');
+        }
     }
 
     init() {
         this.loadSettings();
-        this.loadThemeSettings();
         this.renderBookmarks();
         this.setupEventListeners();
         this.applyTheme();
@@ -94,6 +150,7 @@ class SettingsManager {
         document.body.setAttribute('data-theme', this.themeSettings.theme);
         document.documentElement.setAttribute('data-theme', this.themeSettings.theme);
         
+        // Force style recalculation
         getComputedStyle(document.documentElement).getPropertyValue('--molecule-bg');
         
         if (window.molecularBG) {
@@ -108,11 +165,11 @@ class SettingsManager {
         const mainContainer = document.getElementById('main-container');
         
         if (this.themeSettings.showImage) {
-            leftContainer.classList.remove('hidden');
-            mainContainer.classList.remove('no-image');
+            if (leftContainer) leftContainer.classList.remove('hidden');
+            if (mainContainer) mainContainer.classList.remove('no-image');
         } else {
-            leftContainer.classList.add('hidden');
-            mainContainer.classList.add('no-image');
+            if (leftContainer) leftContainer.classList.add('hidden');
+            if (mainContainer) mainContainer.classList.add('no-image');
         }
     }
 
@@ -134,6 +191,10 @@ class SettingsManager {
             const sizePercentage = this.themeSettings.imageSize;
             mainImage.style.transform = `scale(${sizePercentage / 100})`;
             mainImage.style.transformOrigin = 'center';
+            
+            // Ensure image is visible
+            mainImage.style.transition = 'opacity 0.3s ease';
+            mainImage.style.opacity = '1';
         }
     }
 
